@@ -1,3 +1,6 @@
+package com.test;
+
+
 import java.io.IOException;
 import java.net.Socket;
 
@@ -9,6 +12,7 @@ public class test {
             e.printStackTrace();
         }
     }
+
     public static void main(String[] args) {
         new test("localhost", 7777);
     }
