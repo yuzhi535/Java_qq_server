@@ -95,17 +95,27 @@ public class Server {
             try {
                 // register
                 if (!br.readLine().equals("login")) {
-                    String insertsql = "insert into users (user_name, passwd) values (?, ?)";
-                    try {
-                        PreparedStatement ps = conn.prepareStatement(insertsql);
-                        ps.setString(1, user_name);
-                        ps.setString(2, user_passwd);
-                        ps.executeUpdate();
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                    clients.add(s);
+                    user_name = br.readLine();
+                    user_passwd = br.readLine();
 
+                    System.out.println("user_name " + user_name + " passwd " + user_passwd);
+
+                    if (users.containsKey(user_name)) {
+                        System.out.println("the name is owned by the database!\n Please select another one!");
+                        bw.write("not valid\n");
+                        bw.flush();
+                    } else {
+                        String insertsql = "insert into users (user_name, passwd) values (?, ?)";
+                        try {
+                            PreparedStatement ps = conn.prepareStatement(insertsql);
+                            ps.setString(1, user_name);
+                            ps.setString(2, user_passwd);
+                            ps.executeUpdate();
+                        } catch (SQLException e) {
+
+                        }
+                        clients.add(s);
+                    }
                 } else {
                     user_name = br.readLine();
                     if (user_name != null) {
@@ -125,16 +135,10 @@ public class Server {
                         bw.write("valid\n");
                         bw.flush();
                     } else {
-                        try {
-                            bw.write("invalid name! you should register it first!\n");
-                            bw.flush();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        bw.write("invalid\n");
+                        bw.flush();
                     }
                 }
-
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -150,6 +154,18 @@ public class Server {
                 System.out.println("why");
             }
 
+            while (true) {
+                try {
+                    String readContent = br.readLine();
+                    if (readContent == null) {
+                        break;
+                    }
+                    System.out.println(readContent);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+                System.out.println("connection is closed");
 
 //            System.out.println("connection is closed");
         }
