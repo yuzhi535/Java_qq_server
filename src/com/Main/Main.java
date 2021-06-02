@@ -2,6 +2,6 @@ package com.Main;
 
 public class Main {
     public static void main(String[] args) {
-        new Server(7777);
+        new Server(6666);
     }
 }
