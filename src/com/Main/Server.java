@@ -11,7 +11,6 @@ import java.util.HashSet;
 
 /**
  * @todo: 6/1/21 视频 图片传输使用udp协议，正常检测是否在线使用tcp，发送文本使用tcp
- * @todo: 6/1/21 使用sqlite数据库，存储用户的姓名和密码
  */
 public class Server {
     HashSet<Socket> clients;

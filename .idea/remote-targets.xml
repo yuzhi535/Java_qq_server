@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="yuxi@49.232.155.89:22" type="ssh/sftp">
+        <config>
+          <option name="projectRootOnTarget" value="/home/yuxi/java_qq_server" />
+          <option name="serverName" value="yuxi@49.232.155.89:22 password" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="JavaLanguageRuntime">
+          <config>
+            <option name="homePath" value="/usr/lib/jvm/jre-1.8.0-openjdk" />
+            <option name="javaVersionString" value="1.8.0_292" />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>
