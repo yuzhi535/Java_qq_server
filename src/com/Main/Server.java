@@ -89,21 +89,31 @@ public class Server {
                 e.printStackTrace();
             }
 
+
+
             String user_name = null;
             String user_passwd = null;
             try {
-                user_name = br.readLine();
-                if (user_name != null) {
-                    System.out.println(user_name);
+
+                if (!br.readLine().equals("login")) {
+                    //@note  register!!!
                 } else {
-                    throw new IOException("no user_name");
+                    user_name = br.readLine();
+                    if (user_name != null) {
+                        System.out.println(user_name);
+                    } else {
+                        throw new IOException("no user_name");
+                    }
+                    user_passwd = br.readLine();
+                    if (user_passwd != null) {
+                        System.out.println(user_passwd);
+                    } else {
+                        throw new IOException("no_passwd");
+                    }
                 }
-                user_passwd = br.readLine();
-                if (user_passwd != null) {
-                    System.out.println(user_passwd);
-                } else {
-                    throw new IOException("no_passwd");
-                }
+
+
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
