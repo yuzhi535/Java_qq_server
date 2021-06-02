@@ -73,7 +73,7 @@ public class Server {
             }
 
             //  使用数据库对表中数据进行查询，防止未注册账户进入
-            String sql = "SELECT user_name FROM users";
+            String sql = "SELECT * FROM users";
             try {
                 Statement sm = conn.createStatement();
                 ResultSet rs = sm.executeQuery(sql);
@@ -82,6 +82,7 @@ public class Server {
                     String name = rs.getString("user_name");
                     String passwd = rs.getString("passwd");
                     users.put(name, passwd);
+                    System.out.println("database " + name + " " + passwd);
                 }
 
 
@@ -90,56 +91,56 @@ public class Server {
             }
 
 
-
             String user_name = null;
             String user_passwd = null;
             try {
-
+                // register
                 if (!br.readLine().equals("login")) {
-                    //@note  register!!!
+                    String insertsql = "insert into users (user_name, passwd) values (?, ?)";
+                    try {
+                        PreparedStatement ps = conn.prepareStatement(insertsql);
+                        ps.setString(1, user_name);
+                        ps.setString(2, user_passwd);
+                        ps.executeUpdate();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    clients.add(s);
+
                 } else {
                     user_name = br.readLine();
                     if (user_name != null) {
-                        System.out.println(user_name);
+                        System.out.println("username = " + user_name);
                     } else {
                         throw new IOException("no user_name");
                     }
                     user_passwd = br.readLine();
                     if (user_passwd != null) {
-                        System.out.println(user_passwd);
+                        System.out.println("user passwd=" + user_passwd);
                     } else {
                         throw new IOException("no_passwd");
                     }
-                }
 
+                    if (users.containsKey(user_name)) {
+                        clients.add(s);
+                        bw.write("valid\n");
+                        bw.flush();
+                    } else {
+                        try {
+                            bw.write("invalid name! you should register it first!\n");
+                            bw.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
 
 
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            if (users.containsKey(user_name)) {
-                if (user_name == null || user_passwd == null) {
 
-                }
-                clients.add(s);
-                String insertsql = "insert into users (user_name, passwd) values (?, ?)";
-                try {
-                    PreparedStatement ps = conn.prepareStatement(insertsql);
-                    ps.setString(1, user_name);
-                    ps.setString(2, user_passwd);
-                    ps.executeUpdate();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            } else {
-                try {
-                    bw.write("invalid name! you should register it first!");
-                    bw.flush();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
         @Override
@@ -151,7 +152,7 @@ public class Server {
             }
 
 
-            System.out.println("connection is closed");
+//            System.out.println("connection is closed");
         }
     }
 }
