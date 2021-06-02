@@ -14,10 +14,13 @@ import java.util.HashSet;
  */
 public class Server {
     HashSet<Socket> clients;
+    HashMap<String, String> users;
+
     Server(int ip) {
         try {
             ServerSocket serverSocket = new ServerSocket(6666);
             clients = new HashSet<>();
+            users = new HashMap<>();
             while (true) {
                 try {
                     Socket s = serverSocket.accept();
@@ -44,7 +47,6 @@ public class Server {
 
         MyServer(Socket _socket) {
             s = _socket;
-
             try {
                 Class.forName(jdbc).newInstance();
 
@@ -61,50 +63,95 @@ public class Server {
                 System.out.println("数据库连接错误!,即将退出");
                 //    退出
             }
+
+            try {
+                br = new BufferedReader(new InputStreamReader(s.getInputStream(), StandardCharsets.UTF_8));
+                bw = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            //  使用数据库对表中数据进行查询，防止未注册账户进入
+            String sql = "SELECT * FROM users";
+            try {
+                Statement sm = conn.createStatement();
+                ResultSet rs = sm.executeQuery(sql);
+
+                while (rs.next()) {
+                    String name = rs.getString("user_name");
+                    String passwd = rs.getString("passwd");
+                    users.put(name, passwd);
+                    System.out.println("database " + name + " " + passwd);
+                }
+
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+
+            String user_name = null;
+            String user_passwd = null;
+            try {
+                // register
+                if (!br.readLine().equals("login")) {
+                    String insertsql = "insert into users (user_name, passwd) values (?, ?)";
+                    try {
+                        PreparedStatement ps = conn.prepareStatement(insertsql);
+                        ps.setString(1, user_name);
+                        ps.setString(2, user_passwd);
+                        ps.executeUpdate();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    clients.add(s);
+
+                } else {
+                    user_name = br.readLine();
+                    if (user_name != null) {
+                        System.out.println("username = " + user_name);
+                    } else {
+                        throw new IOException("no user_name");
+                    }
+                    user_passwd = br.readLine();
+                    if (user_passwd != null) {
+                        System.out.println("user passwd=" + user_passwd);
+                    } else {
+                        throw new IOException("no_passwd");
+                    }
+
+                    if (users.containsKey(user_name)) {
+                        clients.add(s);
+                        bw.write("valid\n");
+                        bw.flush();
+                    } else {
+                        try {
+                            bw.write("invalid name! you should register it first!\n");
+                            bw.flush();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
         }
 
         @Override
         public void run() {
-            try {
-                br = new BufferedReader(new InputStreamReader(s.getInputStream(), StandardCharsets.UTF_8));
-                bw = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), StandardCharsets.UTF_8));
+            System.out.println("connected to " + s.getRemoteSocketAddress());
 
-                System.out.println("connected to " + s.getRemoteSocketAddress());
-
-                if (s.isClosed()) {
-                    System.out.println("why");
-                }
-
-                String str;
-                try {
-                    str = br.readLine();
-                    if (str != null)
-                        System.out.println(str);
-                    str = br.readLine();
-                    if (str != null) {
-                        System.out.println(str);
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                while (true) {
-                    try {
-                        str = br.readLine();
-                        if (str != null)
-                            System.out.println(str);
-                        else {
-                            break;
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-                System.out.println("connection is closed");
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (s.isClosed()) {
+                System.out.println("why");
             }
+
+
+//            System.out.println("connection is closed");
         }
     }
-
 }
