@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Java_qq_server:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Java_qq_server_jar</output-path>
+    <root id="archive" name="Java_qq_server.jar">
+      <element id="module-output" name="Java_qq_server" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/lib/sqlite-jdbc-3.34.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

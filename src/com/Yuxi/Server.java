@@ -7,6 +7,7 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -67,15 +68,13 @@ public class Server extends Thread {
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 e.printStackTrace();
                 System.out.println("数据库加载错误，即将退出!");
-                //------------------------
 
-                //------------------------
+
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("数据库连接错误!,即将退出");
                 //    退出
             }
-
             try {
                 in = new ObjectInputStream(s.getInputStream());
                 out = new ObjectOutputStream(s.getOutputStream());
@@ -165,19 +164,20 @@ public class Server extends Thread {
             System.out.println("connected to " + s.getRemoteSocketAddress());
 
             User info;
-            int index;
+            int index = 0;
             byte[] data;
             int totalSize;
             int type;
             int dataSize = 0;
-            byte[] rawDat = null;
+            byte[] rawDat;
             String users = "";
             StringBuilder infoString = new StringBuilder();
+
 
             while (true) {
                 try {
                     info = (User) in.readObject();
-                    index = info.getIndex();
+//                    index = info.getIndex();
                     data = info.getData();
                     users = info.getGroup();
                     totalSize = info.getTotal_size();
@@ -192,9 +192,13 @@ public class Server extends Thread {
 
                             infoString = new StringBuilder();
                         } else if (type == 2) {
-                            /**
-                             *
-                             */
+                            System.out.println("file recv1");
+//                            rawDat += new String(data);
+                            info = new User(user_name, user_passwd, 1, 2, data.length,
+                                    users, data, data.length);
+                            sendMsg(info);
+//                            rawDat = "";
+                            index = 0;
                         } else {
                             String name = "";
                             for (String userName :
@@ -202,8 +206,6 @@ public class Server extends Thread {
                                 name += "\r" + userName;
                             }
                             name += "\r";
-                            System.out.println(name);
-
                             info = new User(user_name, user_passwd, 1, 3, name.length(), name,
                                     name.getBytes(StandardCharsets.UTF_8), name.length());
                             sendMsg(info);
@@ -215,9 +217,13 @@ public class Server extends Thread {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
                         } else if (type == 2) {
-                            /**
-                             *
-                             */
+                            if (index == 0) {
+                                rawDat = new byte[totalSize];
+                                ++index;
+                            }
+
+                            System.out.println("file recv2");
+//                            rawDat += data;
                         } else {
 
                         }
