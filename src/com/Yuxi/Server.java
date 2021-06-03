@@ -1,9 +1,8 @@
-package com.Main;
+package com.Yuxi;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.util.HashMap;
@@ -42,8 +41,8 @@ public class Server {
         String jdbc = "org.sqlite.JDBC";
         Connection conn;
 
-        BufferedWriter bw;
-        BufferedReader br;
+        ObjectOutputStream out;
+        ObjectInputStream in;
 
         MyServer(Socket _socket) {
             s = _socket;
@@ -65,8 +64,9 @@ public class Server {
             }
 
             try {
-                br = new BufferedReader(new InputStreamReader(s.getInputStream(), StandardCharsets.UTF_8));
-                bw = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), StandardCharsets.UTF_8));
+                in = new ObjectInputStream(s.getInputStream());
+                out = new ObjectOutputStream(s.getOutputStream());
+                out.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -94,16 +94,16 @@ public class Server {
             String user_passwd = null;
             try {
                 // register
-                if (!br.readLine().equals("login")) {
-                    user_name = br.readLine();
-                    user_passwd = br.readLine();
+                if (!in.readUTF().equals("login")) {
+                    user_name = in.readUTF();
+                    user_passwd = in.readUTF();
 
                     System.out.println("user_name " + user_name + " passwd " + user_passwd);
 
                     if (users.containsKey(user_name)) {
                         System.out.println("the name is owned by the database!\n Please select another one!");
-                        bw.write("not valid\n");
-                        bw.flush();
+                        out.writeUTF("not valid\n");
+                        out.flush();
                     } else {
                         String insertsql = "insert into users (user_name, passwd) values (?, ?)";
                         try {
@@ -114,29 +114,23 @@ public class Server {
                         } catch (SQLException e) {
 
                         }
+                        out.writeUTF("valid\n");
+                        out.flush();
                         clients.add(s);
                     }
                 } else {
-                    user_name = br.readLine();
-                    if (user_name != null) {
-                        System.out.println("username = " + user_name);
-                    } else {
-                        throw new IOException("no user_name");
-                    }
-                    user_passwd = br.readLine();
-                    if (user_passwd != null) {
-                        System.out.println("user passwd=" + user_passwd);
-                    } else {
-                        throw new IOException("no_passwd");
-                    }
+                    user_name = in.readUTF();
+                    System.out.println("username = " + user_name);
+                    user_passwd = in.readUTF();
+                    System.out.println("user passwd=" + user_passwd);
 
                     if (users.containsKey(user_name)) {
                         clients.add(s);
-                        bw.write("valid\n");
-                        bw.flush();
+                        out.writeUTF("valid\n");
+                        out.flush();
                     } else {
-                        bw.write("invalid\n");
-                        bw.flush();
+                        out.writeUTF("invalid\n");
+                        out.flush();
                     }
                 }
             } catch (IOException e) {
@@ -156,7 +150,7 @@ public class Server {
 
             while (true) {
                 try {
-                    String readContent = br.readLine();
+                    String readContent = in.readLine();
                     if (readContent == null) {
                         break;
                     }
@@ -165,9 +159,7 @@ public class Server {
                     e.printStackTrace();
                 }
             }
-                System.out.println("connection is closed");
-
-//            System.out.println("connection is closed");
+            System.out.println("connection is closed");
         }
     }
 }

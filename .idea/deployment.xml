@@ -5,7 +5,7 @@
       <paths name="49.232.155.89">
         <serverdata>
           <mappings>
-            <mapping deploy="/ideaProjects/Java_qq_server" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/Java_qq_server" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

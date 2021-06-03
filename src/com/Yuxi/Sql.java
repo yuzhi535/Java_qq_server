@@ -1,6 +1,4 @@
-package com.Main;
-
-import java.sql.*;
+package com.Yuxi;
 
 public class Sql {
     Sql() {

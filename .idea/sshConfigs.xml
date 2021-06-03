@@ -2,7 +2,9 @@
 <project version="4">
   <component name="SshConfigs">
     <configs>
-      <sshConfig authType="PASSWORD" host="49.232.155.89" id="6d407dae-88d2-4f2c-aada-c9e54464fd79" port="22" nameFormat="DESCRIPTIVE" username="yuxi" />
+      <sshConfig authType="PASSWORD" connectionConfig="{&quot;serverAliveInterval&quot;:300}" host="49.232.155.89" id="6d407dae-88d2-4f2c-aada-c9e54464fd79" port="22" customName="yuxi@49.232.155.89" nameFormat="CUSTOM" username="yuxi">
+        <option name="customName" value="yuxi@49.232.155.89" />
+      </sshConfig>
     </configs>
   </component>
 </project>

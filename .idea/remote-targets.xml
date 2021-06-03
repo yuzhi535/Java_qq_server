@@ -4,8 +4,8 @@
     <targets>
       <target name="yuxi@49.232.155.89:22" type="ssh/sftp">
         <config>
-          <option name="projectRootOnTarget" value="/home/yuxi/java_qq_server" />
-          <option name="serverName" value="yuxi@49.232.155.89:22 password" />
+          <option name="projectRootOnTarget" value="$PROJECT_DIR$/../../../yuxi/java_qq_server" />
+          <option name="serverName" value="yuxi@49.232.155.89" />
           <option name="useRsync" value="true" />
         </config>
         <ContributedStateBase type="JavaLanguageRuntime">
