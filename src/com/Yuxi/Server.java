@@ -3,8 +3,10 @@ package com.Yuxi;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -14,17 +16,19 @@ import java.util.HashSet;
 public class Server {
     HashSet<Socket> clients;
     HashMap<String, String> users;
+    HashMap<String, Socket> user_to_clients;
 
     Server(int ip) {
         try {
             ServerSocket serverSocket = new ServerSocket(6666);
             clients = new HashSet<>();
             users = new HashMap<>();
+            user_to_clients = new HashMap<>();
             while (true) {
                 try {
-                    Socket s = serverSocket.accept();
-                    clients.add(s);
-                    Thread thread = new MyServer(s);
+                    Socket ss = serverSocket.accept();
+                    clients.add(ss);
+                    Thread thread = new MyServer(ss);
                     thread.start();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -43,6 +47,8 @@ public class Server {
 
         ObjectOutputStream out;
         ObjectInputStream in;
+
+        boolean isValid = false;
 
         MyServer(Socket _socket) {
             s = _socket;
@@ -84,7 +90,6 @@ public class Server {
                     System.out.println("database " + name + " " + passwd);
                 }
 
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -94,7 +99,9 @@ public class Server {
             String user_passwd = null;
             try {
                 // register
-                if (!in.readUTF().equals("login")) {
+                String read = in.readUTF();
+                System.out.println(read);
+                if (read.equals("register")) {
                     user_name = in.readUTF();
                     user_passwd = in.readUTF();
 
@@ -102,7 +109,7 @@ public class Server {
 
                     if (users.containsKey(user_name)) {
                         System.out.println("the name is owned by the database!\n Please select another one!");
-                        out.writeUTF("not valid\n");
+                        out.writeUTF("not valid");
                         out.flush();
                     } else {
                         String insertsql = "insert into users (user_name, passwd) values (?, ?)";
@@ -114,24 +121,31 @@ public class Server {
                         } catch (SQLException e) {
 
                         }
-                        out.writeUTF("valid\n");
+                        out.writeUTF("valid");
                         out.flush();
                         clients.add(s);
+                        isValid = true;
                     }
-                } else {
+                } else if (read.equals("login")) {
                     user_name = in.readUTF();
                     System.out.println("username = " + user_name);
                     user_passwd = in.readUTF();
-                    System.out.println("user passwd=" + user_passwd);
+                    System.out.println("user passwd = " + user_passwd);
 
-                    if (users.containsKey(user_name)) {
-                        clients.add(s);
-                        out.writeUTF("valid\n");
+                    if (users.containsKey(user_name) && users.get(user_name).equals(user_passwd) && !user_to_clients.containsKey(user_name)) {
+                        out.writeUTF("valid");
                         out.flush();
+                        clients.add(s);
+                        user_to_clients.put(user_name, s);
+                        isValid = true;
                     } else {
-                        out.writeUTF("invalid\n");
+                        out.writeUTF("invalid");
                         out.flush();
                     }
+                } else {
+                    /*
+                      impossible
+                     */
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -142,24 +156,72 @@ public class Server {
 
         @Override
         public void run() {
+            if (!isValid) {
+                return;
+            }
             System.out.println("connected to " + s.getRemoteSocketAddress());
 
-            if (s.isClosed()) {
-                System.out.println("why");
-            }
+            User info;
+            int index;
+            byte[] data;
+            int totalSize;
+            int type;
+            int dataSize = 0;
+            String users = "";
+            StringBuilder infoString = new StringBuilder();
 
             while (true) {
                 try {
-                    String readContent = in.readLine();
-                    if (readContent == null) {
-                        break;
+                    info = (User) in.readObject();
+                    index = info.getIndex();
+                    data = info.getData();
+                    users = info.getGroup();
+                    totalSize = info.getTotal_size();
+                    type = info.getType();
+                    dataSize += info.getData_size();
+                    if (dataSize == totalSize) {
+                        if (type == 1) {
+                            infoString.append(Arrays.toString(data));
+                            System.out.println(infoString);
+
+                            sendMsg(String.valueOf(infoString));
+
+                            infoString = new StringBuilder();
+                        } else {
+                            /**
+                             *
+                             */
+                        }
+                        dataSize = 0;
+                        users = "";
+                        info = null;
+                    } else {
+                        if (type == 1) {
+                            infoString.append(Arrays.toString(data));
+                        } else {
+                            /**
+                             *
+                             */
+                        }
                     }
-                    System.out.println(readContent);
-                } catch (IOException e) {
+                } catch (EOFException | SocketException e) {
+                    break;
+                } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
             }
-            System.out.println("connection is closed");
+            System.out.println("connection closed");
+            clients.remove(s);
+            user_to_clients.remove(users);
+        }
+
+        void sendMsg(String msg) {
+            try {
+                out.writeObject(msg);
+                out.flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
