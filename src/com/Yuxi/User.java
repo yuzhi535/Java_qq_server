@@ -55,5 +55,9 @@ public class User implements Serializable {
     int getType() {
         return type;
     }
+
+    String getUser_name() {
+        return user_name;
+    }
 }
 

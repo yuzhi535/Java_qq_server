@@ -11,10 +11,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * @todo: 6/1/21 视频 图片传输使用udp协议，正常检测是否在线使用tcp，发送文本使用tcp
+ * @todo 聊天室设计
+ * @todo 发送图片
+ * @todo 有空了写发送视频
  */
-public class Server {
-    HashSet<Socket> clients;
+public class Server extends Thread {
+    HashSet<ObjectOutputStream> clients;
     HashMap<String, String> users;
     HashMap<String, Socket> user_to_clients;
 
@@ -27,7 +29,6 @@ public class Server {
             while (true) {
                 try {
                     Socket ss = serverSocket.accept();
-                    clients.add(ss);
                     Thread thread = new MyServer(ss);
                     thread.start();
                 } catch (IOException e) {
@@ -39,11 +40,18 @@ public class Server {
         }
     }
 
+    public synchronized void sendToAll() {
+
+    }
+
     class MyServer extends Thread {
         Socket s;
         String url = "jdbc:sqlite:users.db";
         String jdbc = "org.sqlite.JDBC";
         Connection conn;
+
+        String user_name = null;
+        String user_passwd = null;
 
         ObjectOutputStream out;
         ObjectInputStream in;
@@ -95,8 +103,6 @@ public class Server {
             }
 
 
-            String user_name = null;
-            String user_passwd = null;
             try {
                 // register
                 String read = in.readUTF();
@@ -123,7 +129,7 @@ public class Server {
                         }
                         out.writeUTF("valid");
                         out.flush();
-                        clients.add(s);
+                        clients.add(out);
                         isValid = true;
                     }
                 } else if (read.equals("login")) {
@@ -135,7 +141,7 @@ public class Server {
                     if (users.containsKey(user_name) && users.get(user_name).equals(user_passwd) && !user_to_clients.containsKey(user_name)) {
                         out.writeUTF("valid");
                         out.flush();
-                        clients.add(s);
+                        clients.add(out);
                         user_to_clients.put(user_name, s);
                         isValid = true;
                     } else {
@@ -150,8 +156,6 @@ public class Server {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-
         }
 
         @Override
@@ -184,7 +188,7 @@ public class Server {
                             infoString.append(Arrays.toString(data));
                             System.out.println(infoString);
 
-                            sendMsg(String.valueOf(infoString));
+                            sendMsg(info);
 
                             infoString = new StringBuilder();
                         } else {
@@ -211,14 +215,19 @@ public class Server {
                 }
             }
             System.out.println("connection closed");
-            clients.remove(s);
-            user_to_clients.remove(users);
+            clients.remove(out);
+            user_to_clients.remove(user_name);
+            String close_info = "下线";
+            sendMsg(new User(user_name, user_passwd, 1, 1, close_info.length(), "asd", close_info.getBytes(StandardCharsets.UTF_8), close_info.length()));
         }
 
-        void sendMsg(String msg) {
+        synchronized void sendMsg(User info) {
             try {
-                out.writeObject(msg);
-                out.flush();
+                for (ObjectOutputStream os :
+                        clients) {
+                    os.writeObject(info);
+                    os.flush();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
