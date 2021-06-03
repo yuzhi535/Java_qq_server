@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * @todo 聊天室设计
  * @todo 发送图片
  * @todo 有空了写发送视频
  */
@@ -171,6 +170,7 @@ public class Server extends Thread {
             int totalSize;
             int type;
             int dataSize = 0;
+            byte[] rawDat = null;
             String users = "";
             StringBuilder infoString = new StringBuilder();
 
@@ -191,10 +191,22 @@ public class Server extends Thread {
                             sendMsg(info);
 
                             infoString = new StringBuilder();
-                        } else {
+                        } else if (type == 2) {
                             /**
                              *
                              */
+                        } else {
+                            String name = "";
+                            for (String userName :
+                                    user_to_clients.keySet()) {
+                                name += "\r" + userName;
+                            }
+                            name += "\r";
+                            System.out.println(name);
+
+                            info = new User(user_name, user_passwd, 1, 3, name.length(), name,
+                                    name.getBytes(StandardCharsets.UTF_8), name.length());
+                            sendMsg(info);
                         }
                         dataSize = 0;
                         users = "";
@@ -202,10 +214,12 @@ public class Server extends Thread {
                     } else {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
-                        } else {
+                        } else if (type == 2) {
                             /**
                              *
                              */
+                        } else {
+
                         }
                     }
                 } catch (EOFException | SocketException e) {
