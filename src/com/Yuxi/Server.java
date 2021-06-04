@@ -122,13 +122,17 @@ public class Server extends Thread {
                             ps.setString(1, user_name);
                             ps.setString(2, user_passwd);
                             ps.executeUpdate();
-                        } catch (SQLException e) {
 
+                            out.writeUTF("valid");
+                            out.flush();
+                            clients.add(out);
+                            users.put(user_name, user_passwd);
+                            user_to_clients.put(user_name, s);
+                            isValid = true;
+                        } catch (SQLException e) {
+                            e.printStackTrace();
                         }
-                        out.writeUTF("valid");
-                        out.flush();
-                        clients.add(out);
-                        isValid = true;
+
                     }
                 } else if (read.equals("login")) {
                     user_name = in.readUTF();
@@ -140,6 +144,7 @@ public class Server extends Thread {
                         out.writeUTF("valid");
                         out.flush();
                         clients.add(out);
+                        users.put(user_name, user_passwd);
                         user_to_clients.put(user_name, s);
                         isValid = true;
                     } else {
