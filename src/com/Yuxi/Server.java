@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.stream.Stream;
 
 /**
  * @todo 发送图片
@@ -68,8 +69,6 @@ public class Server extends Thread {
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 e.printStackTrace();
                 System.out.println("数据库加载错误，即将退出!");
-
-
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("数据库连接错误!,即将退出");
@@ -178,7 +177,6 @@ public class Server extends Thread {
             String users = "";
             StringBuilder infoString = new StringBuilder();
 
-
             while (true) {
                 try {
                     info = (User) in.readObject();
@@ -187,7 +185,7 @@ public class Server extends Thread {
                     users = info.getGroup();
                     totalSize = info.getTotal_size();
                     type = info.getType();
-                    dataSize += info.getData_size();
+                    dataSize = info.getData_size();
                     if (dataSize == totalSize) {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
@@ -198,13 +196,9 @@ public class Server extends Thread {
                             infoString = new StringBuilder();
                         } else if (type == 2) {
                             System.out.println("file recv1");
-//                            rawDat += new String(data);
-                            info = new User(user_name, user_passwd, 1, 2, data.length,
-                                    users, data, data.length);
+
                             sendMsg(info);
-//                            rawDat = "";
-                            index = 0;
-                        } else {
+                        } else if (type == 3) {
                             String name = "";
                             for (String userName :
                                     user_to_clients.keySet()) {
@@ -220,19 +214,16 @@ public class Server extends Thread {
                         info = null;
                     } else {
                         if (type == 1) {
+                            System.out.println("msg recv2");
                             infoString.append(Arrays.toString(data));
                         } else if (type == 2) {
-                            if (index == 0) {
-                                rawDat = new byte[totalSize];
-                                ++index;
-                            }
-
                             System.out.println("file recv2");
-//                            rawDat += data;
-                        } else {
-
+                            sendMsg(info);
                         }
                     }
+                } catch (StreamCorruptedException e) {
+                    String str = "系统消息：发送文件失败";
+                    System.out.println(str);
                 } catch (EOFException | SocketException e) {
                     break;
                 } catch (ClassNotFoundException | IOException e) {
