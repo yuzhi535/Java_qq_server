@@ -182,6 +182,7 @@ public class Server extends Thread {
                     totalSize = info.getTotal_size();
                     type = info.getType();
                     dataSize = info.getData_size();
+                    System.out.println("index = " + index + " datasize = " + dataSize + " and total = " + totalSize);
                     if (totalSize - dataSize < 1024) {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
