@@ -169,7 +169,6 @@ public class Server extends Thread {
             int totalSize;
             int type;
             int dataSize = 0;
-            byte[] rawDat;
             String users = "";
             StringBuilder infoString = new StringBuilder();
 
@@ -177,13 +176,13 @@ public class Server extends Thread {
             while (true) {
                 try {
                     info = (User) in.readObject();
-//                    index = info.getIndex();
+                    index = info.getIndex();
                     data = info.getData();
                     users = info.getGroup();
                     totalSize = info.getTotal_size();
                     type = info.getType();
-                    dataSize += info.getData_size();
-                    if (dataSize == totalSize) {
+                    dataSize = info.getData_size();
+                    if (totalSize - dataSize < 1024) {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
                             System.out.println(infoString);
@@ -192,13 +191,10 @@ public class Server extends Thread {
 
                             infoString = new StringBuilder();
                         } else if (type == 2) {
-                            System.out.println("file recv1");
 //                            rawDat += new String(data);
-                            info = new User(user_name, user_passwd, 1, 2, data.length,
-                                    users, data, data.length);
                             sendMsg(info);
+
 //                            rawDat = "";
-                            index = 0;
                         } else {
                             String name = "";
                             for (String userName :
@@ -210,26 +206,20 @@ public class Server extends Thread {
                                     name.getBytes(StandardCharsets.UTF_8), name.length());
                             sendMsg(info);
                         }
-                        dataSize = 0;
-                        users = "";
                         info = null;
                     } else {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
                         } else if (type == 2) {
-                            if (index == 0) {
-                                rawDat = new byte[totalSize];
-                                ++index;
-                            }
-
-                            System.out.println("file recv2");
-//                            rawDat += data;
+                            sendMsg(info);
                         } else {
 
                         }
                     }
                 } catch (EOFException | SocketException e) {
                     break;
+                } catch (StreamCorruptedException e) {
+                    sendMsg(new User(user_name, user_passwd, 1, 1, 1, "asd", "传输失败".getBytes(), 8));
                 } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }
