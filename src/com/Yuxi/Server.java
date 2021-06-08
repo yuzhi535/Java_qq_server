@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.stream.Stream;
 
 /**
  * @todo 发送图片
@@ -69,6 +68,8 @@ public class Server extends Thread {
             } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
                 e.printStackTrace();
                 System.out.println("数据库加载错误，即将退出!");
+
+
             } catch (SQLException e) {
                 e.printStackTrace();
                 System.out.println("数据库连接错误!,即将退出");
@@ -121,17 +122,13 @@ public class Server extends Thread {
                             ps.setString(1, user_name);
                             ps.setString(2, user_passwd);
                             ps.executeUpdate();
-
-                            out.writeUTF("valid");
-                            out.flush();
-                            clients.add(out);
-                            users.put(user_name, user_passwd);
-                            user_to_clients.put(user_name, s);
-                            isValid = true;
                         } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
 
+                        }
+                        out.writeUTF("valid");
+                        out.flush();
+                        clients.add(out);
+                        isValid = true;
                     }
                 } else if (read.equals("login")) {
                     user_name = in.readUTF();
@@ -143,7 +140,6 @@ public class Server extends Thread {
                         out.writeUTF("valid");
                         out.flush();
                         clients.add(out);
-                        users.put(user_name, user_passwd);
                         user_to_clients.put(user_name, s);
                         isValid = true;
                     } else {
@@ -173,20 +169,21 @@ public class Server extends Thread {
             int totalSize;
             int type;
             int dataSize = 0;
-            byte[] rawDat;
             String users = "";
             StringBuilder infoString = new StringBuilder();
+
 
             while (true) {
                 try {
                     info = (User) in.readObject();
-//                    index = info.getIndex();
+                    index = info.getIndex();
                     data = info.getData();
                     users = info.getGroup();
                     totalSize = info.getTotal_size();
                     type = info.getType();
                     dataSize = info.getData_size();
-                    if (dataSize == totalSize) {
+                    System.out.println("index = " + index + " datasize = " + dataSize + " and total = " + totalSize);
+                    if (totalSize - dataSize < 1024) {
                         if (type == 1) {
                             infoString.append(Arrays.toString(data));
                             System.out.println(infoString);
@@ -195,10 +192,11 @@ public class Server extends Thread {
 
                             infoString = new StringBuilder();
                         } else if (type == 2) {
-                            System.out.println("file recv1");
-
+//                            rawDat += new String(data);
                             sendMsg(info);
-                        } else if (type == 3) {
+
+//                            rawDat = "";
+                        } else {
                             String name = "";
                             for (String userName :
                                     user_to_clients.keySet()) {
@@ -209,23 +207,20 @@ public class Server extends Thread {
                                     name.getBytes(StandardCharsets.UTF_8), name.length());
                             sendMsg(info);
                         }
-                        dataSize = 0;
-                        users = "";
                         info = null;
                     } else {
                         if (type == 1) {
-                            System.out.println("msg recv2");
                             infoString.append(Arrays.toString(data));
                         } else if (type == 2) {
-                            System.out.println("file recv2");
                             sendMsg(info);
+                        } else {
+
                         }
                     }
-                } catch (StreamCorruptedException e) {
-                    String str = "系统消息：发送文件失败";
-                    System.out.println(str);
                 } catch (EOFException | SocketException e) {
                     break;
+                } catch (StreamCorruptedException e) {
+                    sendMsg(new User(user_name, user_passwd, 1, 1, 1, "asd", "传输失败".getBytes(), 8));
                 } catch (ClassNotFoundException | IOException e) {
                     e.printStackTrace();
                 }

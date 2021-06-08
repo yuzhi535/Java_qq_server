@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 /**
  * 定义传输的数据格式
- * <p>
+ *
  * param data_size  data size
  * param group      users
  * param total_size total size
@@ -12,6 +12,7 @@ import java.io.Serializable;
  * param type       text or img. 1 is text and 2 is img
  */
 public class User implements Serializable {
+    private static final long serialVersionUID = 2709425275741743919L;
     private String user_name;
     private String passwd;
     private int data_size;
